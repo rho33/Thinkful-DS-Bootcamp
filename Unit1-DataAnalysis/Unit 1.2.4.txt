@@ -1,0 +1,72 @@
+What are the three longest trips on rainy days?
+
+select
+	trips.trip_id,
+	trips.duration,
+	Events
+from
+	weather
+join
+	trips
+on
+	substr(trips.start_date,1,10) = weather.DATE
+	and trips.zip_code = weather.ZIP
+where
+	Events LIKE  '%Rain%'
+order by
+	trips.duration desc
+limit 
+	3
+
+
+
+Which station is full most often?
+
+with
+	fullest_station
+as (
+	select
+		station_id,
+		count(*) as 'hours_full'
+	from
+		status
+	where
+		docks_available = 0
+	group by
+		station_id
+	order by
+		count(*) desc
+	limit
+		1
+)
+select
+	stations.name,
+	stations.station_id,
+	fullest_station.hours_full
+from
+	stations
+join
+	fullest_station
+on
+	stations.station_id = fullest_station.station_id
+
+Return a list of stations with a count of number of trips starting at that station but ordered by dock count.
+
+select
+	start_station,
+	count(start_station),
+	dockcount
+from
+	trips
+join
+	stations
+on
+	stations.name = trips.start_station
+group by
+	name
+order by
+	stations.dockcount desc
+
+
+
+

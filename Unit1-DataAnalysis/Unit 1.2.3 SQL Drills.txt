@@ -1,0 +1,41 @@
+Unit 1.2.3 SQL Drills
+
+What was the hottest day in our data set? Where was that?
+
+SELECT
+	Date,
+	max(MaxTemperatureF)
+FROM
+	weather
+
+"2015-11-17"	"134"
+
+How many trips started at each station?
+
+SELECT
+	start_station,
+	Count(*)
+FROM
+	trips
+GROUP by
+	start_station
+
+What's the shortest trip that happened?
+
+SELECT
+	*,
+	min(duration)
+FROM
+	trips
+
+What is the average trip duration, by end station?
+
+SELECT
+	end_station,
+	Avg(duration)/60
+FROM
+	trips
+GROUP by
+	end_station
+ORDER BY
+	avg(duration) DESC

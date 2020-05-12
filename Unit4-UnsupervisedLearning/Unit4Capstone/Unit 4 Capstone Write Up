@@ -1,0 +1,32 @@
+
+
+For this assignment I worked with 10 sets of texts from 10 authors in the nltk.gutenberg corpus. Specifically they were:
+
+1. Persuasion by Jane Austen
+2. Poems of William Blake by William Blake
+3. Stories to Tell to Children by Sara Cone Bryant
+4. The Adventures of Buster Bear by Thornton W. Burgess
+5. Alice's Adventures in Wonderland by Lewis Carroll
+6. The Man Who Was Thursday by G. K. Chesterton
+7. The Parent's Assistant by Maria Edgeworth
+8. Moby Dick by Herman Melville
+9. The Tragedie of Macbeth by William Shakespeare
+10. Leaves of Grass by Walt Whitman
+
+NLTK gutenberg corpus has a function to divide each text into paragraphs. With that function I was able to divide each text into groups of 100 paragraphs. There were a total of 149 groups. Using these groups I then tried to build classification models that could predict the author of each group. 112 of these groups were used as training data and 37 were held out as testing data. 
+
+Before using any of these paragraph groups in a model, I converted each word in each group into its lemma (excluding stop words and pronouns) in order to improve models using term frequency features. 
+
+First I tried different clustering solutions using latent semantic analysis (SVD transformed tfidf data) on the lemmas of each paragraph group. Before clustering, I looked at the composition of the top SVD components. For each of the top 10 components, I looked at the top 10 terms comprising the component and tried to guess which text(s) these words might be best at identifying. Words from Moby Dick, Persuasion, Macbeth, and Alice in Wonderland seemed to be the most represented. Presumably, paragraph groups from these texts could be easier to cluster together than the rest.  
+
+The different clustering methods I tried included k-means, spectral, mean shift, and affinity propagation.
+
+For both k-means and spectral clustering I tried passing four different values for n_clusters which were 2, 5, 10, and 20. For each value of n_clusters the data was clustered multiple times since not every clustering attempt results in the same clusters. While 2 and 5 cluster solutions by themselves can't classify data into 10 categories, I was still curious to see how the texts would be divided at different numbers of clusters. In particular I was looking at which authors were often grouped together, which authors were often assigned to their own clusters, and which authors were often split between clusters. Melville and Chesterton were the authors most often assigned to their own cluster. Bryant, Blake, and Whitman often ended up in the same cluster as did Austen and Edgeworth. Shakespeare, Austen, and Chesterton were split across multiple clusters least often. Bryant and Edgeworth were split across multiple clusters most often. This makes some intuitive sense because the Bryant and Edgeworth texts were both collections of stories rather than novels so they could easily have a bigger variety of terms. The 20 cluster solutions came closest to perfectly representing the ground truth in the training set.
+
+Mean-shift clustering was by far the worst and most boring clustering solution as it always clustered everything into one cluster.
+
+Affinity Propagation turned out to be the best out of the box clustering solution to this problem. It assigned the text to 21 clusters, and every cluster but one consisted of exactly one author. The one cluster with multiple authors had two authors, Austen and Edgeworth, which had been difficult to separate in the other clustering solutions as well. When this clustering solution was tested on the holdout paragraph groups, It correctly placed each group into one of its authors clusters.
+
+Satisfied with my clustering solution, I then wanted to see if a simple bag of words combined with a naive bayes classifier could do as well or better. Because not every author was represented by an equal amount of text in this dataset, I wanted the bag of words model to choose its terms to count by looking at the most common terms per author in the training set. Sci-Kit Learn's CountVectorizer class provides an easy solution for counting terms, but I couldn't find a built in way to make CountVectorizer choose n words per author. So I made my own class called CountWords with its own fit and transform methods which identified the most common n terms per author and then used CountVectorizer to transform the data based on these terms. Because CountWords had its own fit and transform methods, I could also use it in a Sci-Kit Learn pipeline which allowed for easy crossvalidation with a naive bayes model on the entire dataset. Using 1000 terms per author, the naive bayes model was almost perfect when cross-validated.
+
+The bag of words representation of the data fed to the naive bayes model was both a little more accurate than the clustering solutions and much easier to implement. The clustering solutions did shed some light on which authors were most like or unlike each other, and if the ground truth hadn't already been known, then the clustering solution would likely have been acceptable.
